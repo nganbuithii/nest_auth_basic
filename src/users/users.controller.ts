@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -9,10 +9,10 @@ import { IUser } from '@/interfaces/user.interface';
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.usersService.findAll();
+  // }
 
   // api thêm user - đối với HR -cần token
   @Post()
@@ -46,5 +46,17 @@ export class UsersController {
   {
     const foundUser = await this.usersService.findOne(id);
     return foundUser;
+  }
+
+  // phân trang - find all
+  @Public()
+  @Get()
+  @ResponseMessage(' fetch user with pagination')
+  findAll(
+    @Query("page") currentPage : string,
+    @Query("limit") limit:string,
+    @Query() qs:string
+  ){
+    return this.usersService.findAll(+currentPage, +limit, qs)
   }
 }

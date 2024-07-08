@@ -9,6 +9,7 @@ import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { CreateUserDto, RegisterUserDto } from './dto/create-user.dto';
 import { CurrentUser } from '@/decorator/customizes';
 import { IUser } from '@/interfaces/user.interface';
+import aqp from 'api-query-params';
 
 
 @Injectable()
@@ -57,8 +58,24 @@ export class UsersService implements OnModuleInit {
   }
 
 
-  async findAll() {
-    return await this.userModel.find({});
+  async findAll(currentPage: number, limit: number, qs: string) {
+    const {filter, sort, population} = aqp(qs);
+    delete filter.page;
+    delete filter.limit;
+
+    let offset = (+currentPage - 1) * (+limit);
+    let defaultLimit =  +limit ? +limit :10;
+
+    const total = (await this.userModel.find(filter)).length;
+    const totalPage = Math.ceil(total / defaultLimit);
+
+    const result = await this.userModel.find(filter)
+    .skip(offset)
+    .limit(defaultLimit)
+    .sort(sort as any)
+    .select("-password")
+    .populate(population)
+    .exec();
   }
 
   async findByEmail(email: string) {
@@ -69,70 +86,72 @@ export class UsersService implements OnModuleInit {
     return compareSync(hash, plain);
   }
 
-  findOne(id:string){
-    if(!mongoose.Types.ObjectId.isValid(id))
+  findOne(id: string) {
+    if (!mongoose.Types.ObjectId.isValid(id))
       return 'not found user'
     return this.userModel.findOne({
-      _id:id
+      _id: id
     }).select("-password") // không lấy password
   }
-  findOneByUsername(username:string){
-   
+  findOneByUsername(username: string) {
+
     return this.userModel.findOne({
-      email:username
+      email: username
     })
   }
-  checkUserPassword(password:string, hash:string){
+  checkUserPassword(password: string, hash: string) {
     return compareSync(password, hash);
     // sẽ trả ra true hoặc false
   }
 
-  async remove(id:string, user:IUser){
-    if(!mongoose.Types.ObjectId.isValid(id))
+  async remove(id: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(id))
       return 'not found user'
     // để xóa mềm gọi soft delete
     await this.userModel.updateOne(
-      {_id:id},
-      {deletedBy:{
-        _id:user._id,
-        email:user.email
-      }}
+      { _id: id },
+      {
+        deletedBy: {
+          _id: user._id,
+          email: user.email
+        }
+      }
     )
     return this.userModel.softDelete
-    ({
-      _id:id
-    })
+      ({
+        _id: id
+      })
   }
 
   async register(user: RegisterUserDto) {
-    const {name, email, password, age,  address} = user;
+    const { name, email, password, age, address } = user;
     // check logic email đã tồn tại chưa
-    const isExist = await this.userModel.findOne({email: email});
-    if(isExist){
+    const isExist = await this.userModel.findOne({ email: email });
+    if (isExist) {
       throw new BadRequestException(`Email đã tồn tại ${email}`);
     }
     const salt = genSaltSync(10);
     const hashedPassword = hashSync(user.password, salt);
-    const newUser =await this.userModel.create({
+    const newUser = await this.userModel.create({
       name, email,
-      password:hashedPassword,
-      age, 
-      role:'USER'
+      password: hashedPassword,
+      age,
+      role: 'USER'
     })
     return newUser;
   }
   async create(createUser: CreateUserDto, @CurrentUser() user: IUser) {
     const { name, email, password, company, age, address } = createUser;
-    
+
     // Kiểm tra xem email đã tồn tại chưa
     const isExist = await this.userModel.findOne({ email: email });
     if (isExist) {
       throw new BadRequestException(`Email đã tồn tại ${email}`);
     }
-  
+
     const salt = genSaltSync(10);
     const hashedPassword = hashSync(password, salt);
-  
+
     const newUser = await this.userModel.create({
       name,
       email,
@@ -149,22 +168,22 @@ export class UsersService implements OnModuleInit {
       },
       createdDate: new Date(), // Thêm createdDate vào đây nếu cần
     });
-  
+
     return newUser;
   }
-  
 
-  async update(userUpdate:UpdateUserDto, user: IUser){
+
+  async update(userUpdate: UpdateUserDto, user: IUser) {
     const updated = await this.userModel.updateOne(
       {
-        _id:userUpdate._id
-      },{
-        ...userUpdate,
-        updatefBy:{
-          _id:user._id,
-          email:user.email
-        }
+        _id: userUpdate._id
+      }, {
+      ...userUpdate,
+      updatefBy: {
+        _id: user._id,
+        email: user.email
       }
+    }
     )
     return updated;
   }

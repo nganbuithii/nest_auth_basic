@@ -37,8 +37,8 @@ export class AppController {
   @Render('user')
   @Get('/user')
   async getUserPage() {
-    const usersList = await this.usersService.findAll();
-    return { users: usersList };
+    // const usersList = await this.usersService.findAll();
+    // return { users: usersList };
   }
 
   //tham khảo: https://www.loginradius.com/blog/engineering/guest-post/session-authentication-with-nestjs-and-mongodb/
