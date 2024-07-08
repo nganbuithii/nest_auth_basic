@@ -74,7 +74,7 @@ export class UsersService implements OnModuleInit {
       return 'not found user'
     return this.userModel.findOne({
       _id:id
-    })
+    }).select("-password") // không lấy password
   }
   findOneByUsername(username:string){
    

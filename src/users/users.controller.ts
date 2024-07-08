@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Res } from '@nestjs/
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CurrentUser, ResponseMessage } from '@/decorator/customizes';
+import { CurrentUser, Public, ResponseMessage } from '@/decorator/customizes';
 import { IUser } from '@/interfaces/user.interface';
 
 @Controller('users')
@@ -37,5 +37,14 @@ export class UsersController {
   @ResponseMessage('delete a user')
   remove(@Param('id') id : string, @CurrentUser() user:IUser){
     return this.usersService.remove(id, user);
+  }
+
+  @Public()
+  @Get(':id')
+  @ResponseMessage("fetch usere by id")
+  async findOne(@Param('id') id: string)
+  {
+    const foundUser = await this.usersService.findOne(id);
+    return foundUser;
   }
 }
