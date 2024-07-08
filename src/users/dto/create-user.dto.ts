@@ -1,7 +1,13 @@
 import { Type } from "class-transformer";
 import { IsEmail, IsEmpty, IsNotEmpty, IsNotEmptyObject, IsObject, ValidateNested } from "class-validator";
 import mongoose from "mongoose";
+class Company {
+    @IsNotEmpty()
+    _id: mongoose.Schema.Types.ObjectId;
 
+    @IsNotEmpty()
+    name: string;
+}
 export class CreateUserDto {
     // Validate các trường nhập liệu
     @IsNotEmpty({ message: 'Tên không được để trống', })
@@ -32,14 +38,8 @@ export class CreateUserDto {
     company: Company;
 
 }
-class Company {
-    @IsNotEmpty()
-    _id: mongoose.Schema.Types.ObjectId;
 
-    @IsNotEmpty()
-    name: string;
-}
 // dùng ở phía client
-export class RegisterUserDto {
-
+export class RegisterUserDto extends CreateUserDto {
+    // Sử dụng tất cả các thuộc tính từ CreateUserDto
 }

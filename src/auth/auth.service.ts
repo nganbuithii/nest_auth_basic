@@ -1,3 +1,4 @@
+import { RegisterUserDto } from '@/users/dto/create-user.dto';
 import { UsersService } from '@/users/users.service';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -27,5 +28,18 @@ export class AuthService {
         return {
             access_token: this.jwtService.sign(payload),
         };
+    }
+
+    async register(registerUserDto: RegisterUserDto) {
+        try {
+            const newUser = await this.usersService.register(registerUserDto);
+            return {
+                _id: newUser._id,
+                createdDate: newUser.createdDate
+            };
+        } catch (error) {
+            console.error("Error creating user:", error);
+            throw new Error("Failed to create user.");
+        }
     }
 }

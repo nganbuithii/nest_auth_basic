@@ -1,10 +1,14 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { genSaltSync, hashSync, compareSync } from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
+import { CreateUserDto, RegisterUserDto } from './dto/create-user.dto';
+import { CurrentUser } from '@/decorator/customizes';
+import { IUser } from '@/interfaces/user.interface';
 
 
 @Injectable()
@@ -83,14 +87,85 @@ export class UsersService implements OnModuleInit {
     // sẽ trả ra true hoặc false
   }
 
-  remove(id:string){
+  async remove(id:string, user:IUser){
     if(!mongoose.Types.ObjectId.isValid(id))
       return 'not found user'
     // để xóa mềm gọi soft delete
+    await this.userModel.updateOne(
+      {_id:id},
+      {deletedBy:{
+        _id:user._id,
+        email:user.email
+      }}
+    )
     return this.userModel.softDelete
     ({
       _id:id
     })
   }
 
+  async register(user: RegisterUserDto) {
+    const {name, email, password, age,  address} = user;
+    // check logic email đã tồn tại chưa
+    const isExist = await this.userModel.findOne({email: email});
+    if(isExist){
+      throw new BadRequestException(`Email đã tồn tại ${email}`);
+    }
+    const salt = genSaltSync(10);
+    const hashedPassword = hashSync(user.password, salt);
+    const newUser =await this.userModel.create({
+      name, email,
+      password:hashedPassword,
+      age, 
+      role:'USER'
+    })
+    return newUser;
+  }
+  async create(createUser: CreateUserDto, @CurrentUser() user: IUser) {
+    const { name, email, password, company, age, address } = createUser;
+    
+    // Kiểm tra xem email đã tồn tại chưa
+    const isExist = await this.userModel.findOne({ email: email });
+    if (isExist) {
+      throw new BadRequestException(`Email đã tồn tại ${email}`);
+    }
+  
+    const salt = genSaltSync(10);
+    const hashedPassword = hashSync(password, salt);
+  
+    const newUser = await this.userModel.create({
+      name,
+      email,
+      password: hashedPassword,
+      age,
+      role: 'USER',
+      company: {
+        _id: company._id,
+        name: company.name,
+      },
+      createdBy: {
+        _id: user._id,
+        email: user.email,
+      },
+      createdDate: new Date(), // Thêm createdDate vào đây nếu cần
+    });
+  
+    return newUser;
+  }
+  
+
+  async update(userUpdate:UpdateUserDto, user: IUser){
+    const updated = await this.userModel.updateOne(
+      {
+        _id:userUpdate._id
+      },{
+        ...userUpdate,
+        updatefBy:{
+          _id:user._id,
+          email:user.email
+        }
+      }
+    )
+    return updated;
+  }
 }
