@@ -25,6 +25,8 @@ export class CompaniesService {
   // khi test api truyền tham số /?page=3&limit=10
   async findAll(currentpage: number, limit: number, qs: string) {
     const { filter, skip, sort, projection, population } = aqp(qs);
+    delete filter.current;
+    delete filter.pagesize;
 
     let offset = (+currentpage - 1) * (+limit);
     let defaultLimit = +limit ? +limit : 10;

@@ -19,12 +19,14 @@ export class CompaniesController {
   // phải truyền thamn số
   @ResponseMessage("fetch list company with pageinator")
   findAll(
-    @Query("page") curentPage:string,
-    @Query("limit") limit:string,
+    // @Query("page") curentPage:string,
+    // @Query("limit") limit:string,
+    @Query("current") currentPage: string,
+    @Query("pagesize") limit: string,
     // const limit:string = req.query.limit
     @Query() querystring: string
   ) {
-    return this.companiesService.findAll(+curentPage, +limit, querystring);
+    return this.companiesService.findAll(+currentPage, +limit, querystring);
   }
 
   @Get(':id')
