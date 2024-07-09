@@ -1,7 +1,7 @@
 
 import { UsersService } from '@/users/users.service';
 import { RegisterUserDto } from '@/users/dto/create-user.dto';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import ms from 'ms';
@@ -84,5 +84,16 @@ export class AuthService {
             expiresIn:ms(this.configService.get<string>('JWT_REFRESH_EXPRIRE'))/1000,
         });
         return refreshToken; 
+    }
+
+
+    processNewtoken = (refreshToken :string) => {
+        try{
+            this.jwtService.verify(refreshToken,{
+                secret: this.configService.get<string>("JWT_REFRESH_TOKEN_SECRET")
+            })
+        }catch(error){
+            throw new BadRequestException(" refresh token không hợp lệ , Vui lòng login ")
+        }
     }
 }

@@ -37,4 +37,16 @@ export class AuthController {
     {
         return {user}
     }
+
+    @Get('/refresh')
+    @ResponseMessage(" get user refresh ")
+    handleRefreshToken(@Req() request: Request)
+    {
+        // key neyf bên auth services
+        const refreshToken = request.cookies["refresh_token"];
+        return this.authService.processNewtoken(refreshToken);
+    }
+
+
+
 }
