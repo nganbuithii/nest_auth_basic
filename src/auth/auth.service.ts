@@ -1,9 +1,13 @@
+
 import { UsersService } from '@/users/users.service';
 import { RegisterUserDto } from '@/users/dto/create-user.dto';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import ms from 'ms';
+import { IUser } from '@/interfaces/user.interface';
+import {Response} from 'express';
+
 
 @Injectable()
 // VALIDATE USER
@@ -27,7 +31,7 @@ export class AuthService {
         return null;
     }
 
-    async login(user: any) {
+    async login(user: any, response: Response) {
         const { _id, name, email, role } = user;
         const payload = {
             sub: "token login",
@@ -38,6 +42,17 @@ export class AuthService {
             role
         };
         const refreshToken = this.createRefreshToken(payload);
+
+        // updfate user with refresh token
+        await this.userService.updateUserToken(refreshToken,_id);
+
+        // set refresh token as cookie
+        // khi mà access token mà hết hạn thì ta sẽ dùng refresh token
+        response.cookie('refresh_token',refreshToken,{
+            httpOnly:true,
+            maxAge:ms(this.configService.get<string>("JWT_REFRESH_EXPRIRE"))  // tính theo mili giây
+        })
+
         return {
             access_token: this.jwtService.sign(payload),
             user:

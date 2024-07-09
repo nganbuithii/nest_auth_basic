@@ -47,7 +47,7 @@ export class AppController {
   @UseGuards(LocalAuthGuard)
   @Post('/login')
   async handleLoginStateful(@Req() req: Request, @Res() res: Response) {
-    return this.authService.login(req.user);
+    return this.authService.login(req.user, res);
   }
 
   @Post('logout')
