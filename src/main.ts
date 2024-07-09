@@ -25,7 +25,7 @@ async function bootstrap() {
   app.setBaseViewsDir(join(__dirname, '..', 'src/views'));
   app.setViewEngine('ejs');
 
-const reflector  = app.get(Reflector);
+  const reflector = app.get(Reflector);
   app.useGlobalPipes(new ValidationPipe);
   app.useGlobalGuards(new JwtAuthGuard(reflector))
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
@@ -51,9 +51,10 @@ const reflector  = app.get(Reflector);
   //config CORS
   app.enableCors(
     {
-      "origin": "*", // cho phép tất cả nơi nào có thể kết nối đến
+      "origin": true, // cho phép tất cả nơi nào có thể kết nối đến
       "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-      "preflightContinue": false, 
+      "preflightContinue": false,
+      credentials: true,
     }
   );
 
@@ -62,8 +63,8 @@ const reflector  = app.get(Reflector);
   // đặt tiền tố global
   app.setGlobalPrefix('api')
   app.enableVersioning({
-    type : VersioningType.URI, // khi bật cái này mặc định thêm tiền tố v
-    defaultVersion:['1','2']
+    type: VersioningType.URI, // khi bật cái này mặc định thêm tiền tố v
+    defaultVersion: ['1', '2']
   })
 
   await app.listen(port);
