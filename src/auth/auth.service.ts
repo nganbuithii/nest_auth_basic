@@ -1,13 +1,17 @@
-import { RegisterUserDto } from '@/users/dto/create-user.dto';
 import { UsersService } from '@/users/users.service';
+import { RegisterUserDto } from '@/users/dto/create-user.dto';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import ms from 'ms';
 
 @Injectable()
 // VALIDATE USER
 export class AuthService {
     constructor(private usersService: UsersService,
-        private jwtService: JwtService
+        private jwtService: JwtService,
+        private configService:ConfigService,
+        private userService:UsersService
     ) { }
 
     // user và pass là 2 tham số passport ném về
@@ -33,6 +37,7 @@ export class AuthService {
             email,
             role
         };
+        const refreshToken = this.createRefreshToken(payload);
         return {
             access_token: this.jwtService.sign(payload),
             user:
@@ -56,5 +61,13 @@ export class AuthService {
             console.error("Error creating user:", error);
             throw new Error("Failed to create user.");
         }
+    }
+
+    createRefreshToken = (payload :any) => {
+        const refreshToken = this.jwtService.sign(payload, {
+            secret: this.configService.get<string>("JWT_REFRESH_TOKEN_SECRET"),
+            expiresIn:ms(this.configService.get<string>('JWT_REFRESH_EXPRIRE'))/1000,
+        });
+        return refreshToken; 
     }
 }
