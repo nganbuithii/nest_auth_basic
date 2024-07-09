@@ -1,34 +1,51 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
+import { CurrentUser, ResponseMessage } from '@/decorator/customizes';
+import { IUser } from '@/interfaces/user.interface';
 
 @Controller('jobs')
 export class JobsController {
-  constructor(private readonly jobsService: JobsService) {}
+  constructor(private readonly jobsService: JobsService) { }
 
   @Post()
-  create(@Body() createJobDto: CreateJobDto) {
-    return this.jobsService.create(createJobDto);
+  @ResponseMessage(" create new job")
+  // để biết ai là người tạo thì thêm user
+  create(@Body() createJobDto: CreateJobDto, @CurrentUser() user: IUser) {
+    return this.jobsService.create(createJobDto, user);
   }
 
   @Get()
-  findAll() {
-    return this.jobsService.findAll();
+  @ResponseMessage("fetch job with pagination")
+  findAll(
+    @Query("current") currentPage: string,
+    @Query("pageSize") limit: string,
+    @Query() qs: string
+  ) {
+    return this.jobsService.findAll(+currentPage, +limit, qs);
   }
 
   @Get(':id')
+  @ResponseMessage("fetch job by id")
   findOne(@Param('id') id: string) {
-    return this.jobsService.findOne(+id);
+    return this.jobsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateJobDto: UpdateJobDto) {
-    return this.jobsService.update(+id, updateJobDto);
+  @ResponseMessage("update job")
+  update(
+    @Param('id') id: string,
+    @Body() updateJobDto: UpdateJobDto,
+    // thêm thông tin user -> để biết user nào cập nhật
+    @CurrentUser() user: IUser
+  ) {
+    return this.jobsService.update(id, updateJobDto, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.jobsService.remove(+id);
+  @ResponseMessage(" delete a job")
+  remove(@Param('id') id: string, @CurrentUser() user:IUser) {
+    return this.jobsService.remove(id, user);
   }
 }

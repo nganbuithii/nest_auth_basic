@@ -3,14 +3,17 @@ import mongoose, { Date, HydratedDocument } from "mongoose";
 
 
 export type JobDocument = HydratedDocument<Job>;
-@Schema({timestamps: true})
+@Schema({ timestamps: true })
 export class Job {
     @Prop()
     name: string
     @Prop()
     skills: string[]
-    @Prop()
-    // company: object { _id, name }
+    @Prop({ type: Object })
+    company: {
+        _id: mongoose.Schema.Types.ObjectId;
+        name: string;
+    }
     @Prop()
     location: string
     @Prop()
@@ -22,39 +25,39 @@ export class Job {
     level: string
     @Prop()
     description: string;
-    @Prop()
-    startDate: Date
-    @Prop()
-    endDate: Date
+    @Prop({ type: Date })
+    startDate: Date;
+
+    @Prop({ type: Date })
+    endDate: Date;
     @Prop()
     isActive: boolean
 
-    
-    @Prop({ type : Object})
-    createdBy:{
+
+    @Prop({ type: Object })
+    createdBy: {
         _id: mongoose.Schema.Types.ObjectId;
-        email:string
+        email: string
     }
 
 
-    @Prop({ type: Object})
-    updatefBy:{
+    @Prop({ type: Object })
+    updatefBy: {
         _id: mongoose.Schema.Types.ObjectId;
         email: string;
     }
 
-    @Prop({type:Object})
-    deletedBy:{
-        _id:mongoose.Schema.Types.ObjectId;
-        email:string;
+    @Prop({ type: Object })
+    deletedBy: {
+        _id: mongoose.Schema.Types.ObjectId;
+        email: string;
     }
 
-    @Prop()
-    createdDate: Date
+    @Prop({ type: Date })
+    createdDate: Date;
 
-    @Prop()
-    updatedDate:Date;
-
+    @Prop({ type: Date })
+    updatedDate: Date;
 }
 
 export const JobSchema = SchemaFactory.createForClass(Job);
