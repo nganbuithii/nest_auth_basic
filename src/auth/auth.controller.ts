@@ -1,8 +1,9 @@
+import { IUser } from '@/interfaces/user.interface';
 import { AuthService } from './auth.service';
-import { Public, ResponseMessage } from '@/decorator/customizes';
+import { CurrentUser, Public, ResponseMessage } from '@/decorator/customizes';
 import { LocalAuthGuard } from '@/stateless/passport/stateless.local.guard';
 import { RegisterUserDto } from '@/users/dto/create-user.dto';
-import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import {Request, Response} from 'express';
 
 @Controller('auth')
@@ -27,5 +28,13 @@ export class AuthController {
         @Res({passthrough:true}) response : Response)
     {
         return this.authService.login(req.user, response);
+    }
+
+
+    @Get('/account')
+    @ResponseMessage(" get information user")
+    handleGetAccount(@CurrentUser() user: IUser)
+    {
+        return {user}
     }
 }
