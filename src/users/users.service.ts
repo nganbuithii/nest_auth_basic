@@ -59,23 +59,23 @@ export class UsersService implements OnModuleInit {
 
 
   async findAll(currentPage: number, limit: number, qs: string) {
-    const {filter, sort, population} = aqp(qs);
+    const { filter, sort, population } = aqp(qs);
     delete filter.page;
     delete filter.limit;
 
     let offset = (+currentPage - 1) * (+limit);
-    let defaultLimit =  +limit ? +limit :10;
+    let defaultLimit = +limit ? +limit : 10;
 
     const total = (await this.userModel.find(filter)).length;
     const totalPage = Math.ceil(total / defaultLimit);
 
     const result = await this.userModel.find(filter)
-    .skip(offset)
-    .limit(defaultLimit)
-    .sort(sort as any)
-    .select("-password")
-    .populate(population)
-    .exec();
+      .skip(offset)
+      .limit(defaultLimit)
+      .sort(sort as any)
+      .select("-password")
+      .populate(population)
+      .exec();
   }
 
   async findByEmail(email: string) {
@@ -189,14 +189,21 @@ export class UsersService implements OnModuleInit {
   }
 
 
-  updateUserToken = async (refreshToken : string, _id:string) => {
+  updateUserToken = async (refreshToken: string, _id: string) => {
     return await this.userModel.updateOne(
       {
-        _id:_id
-      },{
-        refreshToken
-      }
+        _id: _id
+      }, {
+      refreshToken
+    }
     )
 
+  }
+
+
+  findUserByToken = async (refeshToken: string) => {
+    return await this.userModel.findOne(
+      { refeshToken }
+    )
   }
 }

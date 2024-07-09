@@ -4,16 +4,16 @@ import { CurrentUser, Public, ResponseMessage } from '@/decorator/customizes';
 import { LocalAuthGuard } from '@/stateless/passport/stateless.local.guard';
 import { RegisterUserDto } from '@/users/dto/create-user.dto';
 import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
-import {Request, Response} from 'express';
+import { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService:AuthService) {} 
+    constructor(private readonly authService: AuthService) { }
 
     @Public()
     @ResponseMessage("Đăng kí người dùng")
     @Post('/register')
-    handleRegister(@Body() registerUserDto:RegisterUserDto){
+    handleRegister(@Body() registerUserDto: RegisterUserDto) {
         return this.authService.register(registerUserDto);
     }
 
@@ -24,27 +24,25 @@ export class AuthController {
     @Post('/login')
     @ResponseMessage(" uSSER login")
     handleLogin(
-        @Req() req, 
-        @Res({passthrough:true}) response : Response)
-    {
+        @Req() req,
+        @Res({ passthrough: true }) response: Response) {
         return this.authService.login(req.user, response);
     }
 
 
     @Get('/account')
     @ResponseMessage(" get information user")
-    handleGetAccount(@CurrentUser() user: IUser)
-    {
-        return {user}
+    handleGetAccount(@CurrentUser() user: IUser) {
+        return { user }
     }
 
     @Get('/refresh')
     @ResponseMessage(" get user refresh ")
-    handleRefreshToken(@Req() request: Request)
-    {
+    handleRefreshToken(@Req() request: Request,
+        @Res({ passthrough: true }) response: Response) {
         // key neyf bên auth services
         const refreshToken = request.cookies["refresh_token"];
-        return this.authService.processNewtoken(refreshToken);
+        return this.authService.processNewtoken(refreshToken, response);
     }
 
 

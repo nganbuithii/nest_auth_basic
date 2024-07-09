@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import ms from 'ms';
 import { IUser } from '@/interfaces/user.interface';
-import {Response} from 'express';
+import { Response } from 'express';
 
 
 @Injectable()
@@ -14,8 +14,8 @@ import {Response} from 'express';
 export class AuthService {
     constructor(private usersService: UsersService,
         private jwtService: JwtService,
-        private configService:ConfigService,
-        private userService:UsersService
+        private configService: ConfigService,
+        private userService: UsersService
     ) { }
 
     // user và pass là 2 tham số passport ném về
@@ -44,13 +44,13 @@ export class AuthService {
         const refreshToken = this.createRefreshToken(payload);
 
         // updfate user with refresh token
-        await this.userService.updateUserToken(refreshToken,_id);
+        await this.userService.updateUserToken(refreshToken, _id);
 
         // set refresh token as cookie
         // khi mà access token mà hết hạn thì ta sẽ dùng refresh token
-        response.cookie('refresh_token',refreshToken,{
-            httpOnly:true,
-            maxAge:ms(this.configService.get<string>("JWT_REFRESH_EXPRIRE"))  // tính theo mili giây
+        response.cookie('refresh_token', refreshToken, {
+            httpOnly: true,
+            maxAge: ms(this.configService.get<string>("JWT_REFRESH_EXPRIRE"))  // tính theo mili giây
         })
 
         return {
@@ -78,21 +78,66 @@ export class AuthService {
         }
     }
 
-    createRefreshToken = (payload :any) => {
+    createRefreshToken = (payload: any) => {
         const refreshToken = this.jwtService.sign(payload, {
             secret: this.configService.get<string>("JWT_REFRESH_TOKEN_SECRET"),
-            expiresIn:ms(this.configService.get<string>('JWT_REFRESH_EXPRIRE'))/1000,
+            expiresIn: ms(this.configService.get<string>('JWT_REFRESH_EXPRIRE')) / 1000,
         });
-        return refreshToken; 
+        return refreshToken;
     }
 
 
-    processNewtoken = (refreshToken :string) => {
-        try{
-            this.jwtService.verify(refreshToken,{
+    processNewtoken = async (refreshToken: string, response: Response) => {
+        try {
+            this.jwtService.verify(refreshToken, {
                 secret: this.configService.get<string>("JWT_REFRESH_TOKEN_SECRET")
             })
-        }catch(error){
+
+            let user = await this.userService.findUserByToken(refreshToken);
+            console.log(user);
+
+            if (user) {
+                // update reffresh token
+                const { _id, name, email, role } = user;
+                const payload = {
+                    sub: "token login",
+                    iss: "from server",
+                    _id,
+                    name,
+                    email,
+                    role
+                };
+                const refreshToken = this.createRefreshToken(payload);
+
+                // updfate user with refresh token
+                // do _id đang là object id nên phải chuyển sang thành string
+                await this.userService.updateUserToken(refreshToken, _id.toString());
+
+                // set refresh token as cookie
+                // khi mà access token mà hết hạn thì ta sẽ dùng refresh token
+                // xóa đi cookie cũ
+                response.clearCookie("refresh_token")
+
+                // gán cookie mới
+                response.cookie('refresh_token', refreshToken, {
+                    httpOnly: true,
+                    maxAge: ms(this.configService.get<string>("JWT_REFRESH_EXPRIRE"))  // tính theo mili giây
+                })
+
+                return {
+                    access_token: this.jwtService.sign(payload),
+                    user:
+                    {
+                        _id,
+                        name,
+                        email,
+                        role
+                    }
+                };
+            } else {
+                throw new BadRequestException("")
+            }
+        } catch (error) {
             throw new BadRequestException(" refresh token không hợp lệ , Vui lòng login ")
         }
     }
