@@ -19,7 +19,7 @@ export class JobsService {
   ) { }
   async create(createJobDto: CreateJobDto, user: IUser) {
     // lấy ra các trường của job
-    const { name, skills, company, salary, quantity, level, description, endDate, startDate, isActive } = createJobDto;
+    const { name, skills, company, salary, location, quantity, level, description, endDate, startDate, isActive } = createJobDto;
 
     // Kiểm tra nếu endDate trước startDate
     if (endDate && startDate && new Date(endDate) < new Date(startDate)) {
@@ -27,7 +27,7 @@ export class JobsService {
     }
 
     let newJob = await this.jobModel.create({
-      name, skills, company, salary, quantity, level, startDate, endDate, isActive,
+      name, skills, company, salary, quantity, level, startDate, endDate, isActive,location,
       createdBy: {
         _id: user._id,
         email: user.email

@@ -57,4 +57,7 @@ export class CreateJobDto {
     @IsNotEmpty({message:"trạng thái k được để trống"})
     @IsBoolean({message:"trạng thái có kiểu là boole"})
     isActive: boolean;
+
+    @IsNotEmpty({message:"logo không được để trống"})
+    logo: string;
 }

@@ -10,7 +10,7 @@ export class FilesController {
 
   // VALIDATE FILE
 @Post('upload')
-@UseInterceptors(FileInterceptor('file'))
+@UseInterceptors(FileInterceptor('fileUpload'))
 uploadFile(
   // validate file của nest js
   @UploadedFile(

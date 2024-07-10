@@ -3,7 +3,7 @@ import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { User } from '@/users/schemas/user.schema';
-import { CurrentUser, ResponseMessage } from '@/decorator/customizes';
+import { CurrentUser, Public, ResponseMessage } from '@/decorator/customizes';
 import { IUser } from '@/interfaces/user.interface';
 
 @Controller('companies')
@@ -17,6 +17,7 @@ export class CompaniesController {
 
   @Get()
   // phải truyền thamn số
+  @Public()// public ra để cho người dùng có thể thấy khi chưa đăng nhập
   @ResponseMessage("fetch list company with pageinator")
   findAll(
     // @Query("page") curentPage:string,
@@ -30,6 +31,7 @@ export class CompaniesController {
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string) {
     return this.companiesService.findOne(+id);
   }
