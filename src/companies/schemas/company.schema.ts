@@ -38,6 +38,9 @@ export class Company {
     @Prop()
     updatedDate:Date;
 
+    @Prop()
+    logo: string;
+
 
 }
 export const CompanySchema = SchemaFactory.createForClass(Company);
