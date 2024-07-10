@@ -10,18 +10,18 @@ export class FilesController {
 
   // VALIDATE FILE
 @Post('upload')
-@UseInterceptors(FileInterceptor)
+@UseInterceptors(FileInterceptor('file'))
 uploadFile(
   // validate file của nest js
   @UploadedFile(
     new ParseFilePipeBuilder()
       .addFileTypeValidator({
         // fileType: 'jpeg',
-        fileType:/^(jpg|png|jpeg|image\/png|gif|txt|pdf|docx|doc|text\/plain)$/i,
+        fileType:/^(jpg|png|jpeg|image\/jpeg|gif|txt|pdf|application\/pdf|docx|doc|text\/plain)$/i,
         // chỉ cho phép up file dạng này
       })
       .addMaxSizeValidator({
-        maxSize: 1024*1024 // = 1mb
+        maxSize: 100*1024*1024 // = 1mb
       })
       .build({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
