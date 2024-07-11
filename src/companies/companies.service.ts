@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -7,6 +7,7 @@ import { Company, CompanyDocument } from './schemas/company.schema';
 import { ConfigService } from '@nestjs/config';
 import { IUser } from '@/interfaces/user.interface';
 import aqp from 'api-query-params';
+import mongoose from 'mongoose';
 
 
 @Injectable()
@@ -53,8 +54,12 @@ export class CompaniesService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} company`;
+  async findOne(id: string) {
+    if(!mongoose.Types.ObjectId.isValid(id))
+    {
+      throw new BadRequestException(" not found companies with id")
+    }
+    return await this.companyModel.findById(id);
   }
 
   // Bài 57; Bài tập update companies
