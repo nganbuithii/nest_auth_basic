@@ -1,0 +1,46 @@
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import mongoose from "mongoose";
+
+@Schema({ timestamps: true })
+export class Permission {
+    @Prop()
+    name: string
+    @Prop()
+    apiPath: string
+    @Prop()
+    method: string
+    @Prop()
+    module: string //thuộc modules nào ?
+
+    @Prop({ type: Object })
+    createdBy: {
+        _id: mongoose.Schema.Types.ObjectId;
+        email: string
+    }
+
+
+    @Prop({ type: Object })
+    updatedBy: {
+        _id: mongoose.Schema.Types.ObjectId;
+        email: string;
+    }
+
+    @Prop({ type: Object })
+    deletedBy: {
+        _id: mongoose.Schema.Types.ObjectId;
+        email: string;
+    }
+
+    @Prop({ type: Date })
+    createdDate: Date;
+
+    @Prop({ type: Date })
+    updatedDate: Date;
+
+    @Prop()
+    isDeleted: boolean;
+    @Prop()
+    deletedAt:Date;
+}
+
+export const PermissionSchema = SchemaFactory.createForClass(Permission);
