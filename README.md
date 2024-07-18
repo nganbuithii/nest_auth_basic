@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
 </p>
@@ -25,6 +26,9 @@
 ## Description
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+=======
+
+>>>>>>> 1c00af9b99c2f319d0e4302cfc669e55cea62fe2
 
 ## Installation
 
@@ -57,6 +61,7 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+<<<<<<< HEAD
 
 ## Support
 
@@ -71,3 +76,5 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+=======
+>>>>>>> 1c00af9b99c2f319d0e4302cfc669e55cea62fe2
