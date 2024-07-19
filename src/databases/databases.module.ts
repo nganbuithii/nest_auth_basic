@@ -2,22 +2,21 @@ import { Module } from '@nestjs/common';
 import { DatabasesService } from './databases.service';
 import { DatabasesController } from './databases.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from '@/users/schemas/user.schema';
-import { Job, JobSchema } from '@/jobs/schemas/job.schema';
-import { Resume, ResumeSchema } from '@/resumes/schemas/resume.schema';
-import { Permission, PermissionSchema } from '@/permissions/schemas/permission.schema';
+import { User, UserSchema } from 'src/users/schemas/user.schema';
+import { Permission, PermissionSchema } from 'src/permissions/schemas/permission.schema';
+import { Role, RoleSchema } from 'src/roles/schemas/role.schema';
+import { UsersService } from 'src/users/users.service';
 
 @Module({
   controllers: [DatabasesController],
-  providers: [DatabasesService],
+  providers: [DatabasesService, UsersService],
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    MongooseModule.forFeature([{ name: Job.name, schema: JobSchema }]),
-    MongooseModule.forFeature([{name: Resume.name, schema: ResumeSchema}]),
-    MongooseModule.forFeature([{name: Permission.name, schema: PermissionSchema}]),
-
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Permission.name, schema: PermissionSchema },
+      { name: Role.name, schema: RoleSchema },
+    ])
   ],
-  // khi muốn tạo fake data thì ta sẽ viết trực tiếp trong database services
 
 })
 export class DatabasesModule { }

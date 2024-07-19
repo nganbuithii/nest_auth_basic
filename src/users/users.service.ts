@@ -197,7 +197,10 @@ export class UsersService implements OnModuleInit {
     return updated;
   }
 
-
+  getHashPassword(password: string): string {
+    const salt = genSaltSync(10);
+    return hashSync(password, salt);
+  }
   updateUserToken = async (refreshToken: string, _id: string) => {
     return await this.userModel.updateOne(
       {
