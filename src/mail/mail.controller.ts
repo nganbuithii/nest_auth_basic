@@ -17,7 +17,9 @@ export class MailController {
       to: "2151050271ngan@ou.edu.vn",
       from: '"Support Team" <support@example.com>', // override default from
       subject: 'Welcome to Nice App! Confirm your Email',
-      html: '<b>hello word - byNganBT</b>', // HTML body content
+      // html: '<b>hello word - byNganBT</b>', // HTML body content
+      // gửi dưới dang template
+      template:"job" ,// ghi tên file hbs
     });
 
   }
