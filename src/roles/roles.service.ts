@@ -71,7 +71,10 @@ export class RolesService {
     if (!mongoose.Types.ObjectId.isValid(id))
       return 'not found job'
     return await this.roleModel.findById(id)
-      .populate({ path: "permissions", select: { _id: 1, apiPath: 1, name: 1, method: 1 } })
+      .populate({
+        path: "permissions",
+        select: { _id: 1, apiPath: 1, name: 1, method: 1, module: 1 }
+      })
     // số 1 là lấy các trường này của permission
   }
 
@@ -79,35 +82,40 @@ export class RolesService {
     if (!mongoose.Types.ObjectId.isValid(id))
       return 'not found job'
 
-    const {name, description, isActive, permissions} = updateRoleDto;
-    const isExist = await this.roleModel.findOne({ name });
-    if (isExist) {
-      throw new BadRequestException(`Role với name = ${name}đã tồn tại`)
-    }
+    const { name, description, isActive, permissions } = updateRoleDto;
+    // const isExist = await this.roleModel.findOne({ name });
+    // if (isExist) {
+    //   throw new BadRequestException(`Role với name = ${name}đã tồn tại`)
+    // }
 
     const update = await this.roleModel.updateOne(
-      {id},{
-        name, description, isActive, permissions,
-        updatedBy:{
-          _id: user._id,
-          email:user.email
-        }
+      { id }, {
+      name, description, isActive, permissions,
+      updatedBy: {
+        _id: user._id,
+        email: user.email
       }
+    }
     )
     return update;
   }
 
-  async remove(id: string, user:IUser) {
+  async remove(id: string, user: IUser) {
+    // không cho xóa role admin
+    const foundRole = await this.roleModel.findById("id");
+    if(foundRole.name== 'admin'){
+      throw new BadRequestException("can not delete role admin")
+    }
     await this.roleModel.updateOne(
-      {id},
+      { id },
       {
-        deletedBy:{
-          _id:user._id,
-          email:user.email
+        deletedBy: {
+          _id: user._id,
+          email: user.email
         }
       }
     )
-    return this.roleModel.softDelete({_id:id})
+    return this.roleModel.softDelete({ _id: id })
 
   }
 }

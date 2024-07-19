@@ -92,12 +92,13 @@ export class UsersService implements OnModuleInit {
     return this.userModel.findOne({
       _id: id
     }).select("-password") // không lấy password
+    .populate({path:"role", select:{name:1, _id:1}})
   }
   findOneByUsername(username: string) {
 
     return this.userModel.findOne({
       email: username
-    })
+    }).populate({path:"role", select:{name:1, permissions:1}})
   }
   checkUserPassword(password: string, hash: string) {
     return compareSync(password, hash);
@@ -105,9 +106,17 @@ export class UsersService implements OnModuleInit {
   }
 
   async remove(id: string, user: IUser) {
+    // không cho xóa user có emial là admin
+    // admin@gmail.com
+    // nếu muốn cấu hihf động thì cấu hình trong env
+
     if (!mongoose.Types.ObjectId.isValid(id))
       return 'not found user'
     // để xóa mềm gọi soft delete
+    const foundUser = await this.userModel.findById("id");
+    if(foundUser.email == 'admin@gmail.com'){
+      throw new BadRequestException("can not delete user has email admin@gmail.com")
+    }
     await this.userModel.updateOne(
       { _id: id },
       {
