@@ -19,7 +19,7 @@ export class MailController {
       subject: 'Welcome to Nice App! Confirm your Email',
       // html: '<b>hello word - byNganBT</b>', // HTML body content
       // gửi dưới dang template
-      template:"job" ,// ghi tên file hbs
+      template:"new-job" ,// ghi tên file hbs
     });
 
   }
