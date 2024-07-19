@@ -1,12 +1,10 @@
 import { Permission } from "@/permissions/schemas/permission.schema";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-<<<<<<< HEAD
 import mongoose, { HydratedDocument } from "mongoose";
 export type RoleDocument = HydratedDocument<Role>;
-=======
-import mongoose from "mongoose";
 
->>>>>>> 1c00af9b99c2f319d0e4302cfc669e55cea62fe2
+
+
 @Schema({ timestamps: true })
 export class Role {
     @Prop()
