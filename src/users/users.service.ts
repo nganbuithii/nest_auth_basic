@@ -114,7 +114,7 @@ export class UsersService implements OnModuleInit {
       return 'not found user'
     // để xóa mềm gọi soft delete
     const foundUser = await this.userModel.findById("id");
-    if(foundUser.email == 'admin@gmail.com'){
+    if(foundUser && foundUser.email == 'admin@gmail.com'){
       throw new BadRequestException("can not delete user has email admin@gmail.com")
     }
     await this.userModel.updateOne(
@@ -216,6 +216,9 @@ export class UsersService implements OnModuleInit {
   findUserByToken = async (refeshToken: string) => {
     return await this.userModel.findOne(
       { refeshToken }
-    )
+    ).populate({
+      path:"role",
+      select:{name:1}
+    })
   }
 }

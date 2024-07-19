@@ -9,10 +9,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
 import ms from 'ms';
+import { RolesModule } from '@/roles/roles.module';
 
 
 @Module({
-  imports: [UsersModule, PassportModule,
+  imports: [UsersModule, PassportModule,RolesModule,
     // khai báo jwwt và sự dụng biến trong .env
     JwtModule.registerAsync({
       imports: [ConfigModule],

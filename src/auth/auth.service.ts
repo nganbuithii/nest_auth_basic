@@ -1,3 +1,4 @@
+import { RolesService } from './../roles/roles.service';
 
 import { UsersService } from '@/users/users.service';
 import { RegisterUserDto } from '@/users/dto/create-user.dto';
@@ -15,21 +16,38 @@ export class AuthService {
     constructor(private usersService: UsersService,
         private jwtService: JwtService,
         private configService: ConfigService,
-        private userService: UsersService
+        private userService: UsersService,
+        private roleService :RolesService,
     ) { }
 
     // user và pass là 2 tham số passport ném về
     async validateUser(username: string, pass: string): Promise<any> {
         const user = await this.usersService.findOneByUsername(username);
-        // phải so sánh pass đã băm,
         if (user) {
             const isValid = this.usersService.checkUserPassword(pass, user.password)
             if (isValid == true) {
-                return user;
+                const userRole = user.role as unknown as { _id: string, name: string }
+                const temp = await this.roleService.findOne(userRole._id);
+    
+                if (typeof temp === 'object' && 'permissions' in temp) {
+                    const objUser = {
+                        ...user.toObject(),
+                        permissions: temp.permissions
+                    }
+                    return objUser;
+                } else {
+                    // Xử lý khi không tìm thấy quyền
+                    const objUser = {
+                        ...user.toObject(),
+                        permissions: []
+                    }
+                    return objUser;
+                }
             }
         }
         return null;
     }
+    
 
     async login(user: any, response: Response) {
         const { _id, name, email, role } = user;

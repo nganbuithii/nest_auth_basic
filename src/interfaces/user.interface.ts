@@ -7,4 +7,5 @@ export interface IUser {
     password: string;
     isDeleted?: Date;
     deleteAt?: Date;
+    role:string;
 }
