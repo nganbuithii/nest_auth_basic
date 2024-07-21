@@ -57,7 +57,10 @@ async function bootstrap() {
       credentials: true,
     }
   );
-
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    // forbidNonWhitelisted: true
+  }));
   // CONFIG VERSIONING
   // ĐÁNH DẤU VERSIONM CỦA API
   // đặt tiền tố global
