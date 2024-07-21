@@ -41,35 +41,38 @@ export class SubscribersService {
   async findOne(id: string) {
     if (!mongoose.Types.ObjectId.isValid(id))
       return 'not found subcriber'
-    return await this.subcriberModel.findOne({_id:id})
+    return await this.subcriberModel.findOne({ _id: id })
   }
 
-  async update(id: string, updateSubscriberDto: UpdateSubscriberDto, user:IUser) {
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return 'not found job'
+  async update(updateSubscriberDto: UpdateSubscriberDto, user: IUser) {
+
 
     const { name, email, skills } = updateSubscriberDto;
-    const isExist = await this.subcriberModel.findOne({ email});
+    const isExist = await this.subcriberModel.findOne({ email });
     if (isExist) {
       throw new BadRequestException(`Role với name = ${name}đã tồn tại`)
     }
 
     const update = await this.subcriberModel.updateOne(
-      { id }, {
+      { email: user.email }, {
       ...updateSubscriberDto,
       updatedBy: {
         _id: user._id,
         email: user.email
       }
-    }
+    },
+      {
+        // neeus bản ghi tồn tại rồi thì mình sẽ đè
+        upsert: true
+      }
     )
     return update;
   }
 
-  async remove(id: string, user:IUser) {
+  async remove(id: string, user: IUser) {
     // không cho xóa role admin
     const foundSub = await this.subcriberModel.findById("id");
-    
+
     await this.subcriberModel.updateOne(
       { id },
       {
@@ -81,5 +84,11 @@ export class SubscribersService {
     )
     return this.subcriberModel.softDelete({ _id: id })
 
+  }
+
+  // tự ddong fill skill trên giao diện
+  async getSkills(user:IUser){
+    const {email} = user;
+    return await this.subcriberModel.findOne({email},{skills:1})
   }
 }

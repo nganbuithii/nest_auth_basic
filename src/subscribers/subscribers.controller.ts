@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { SubscribersService } from './subscribers.service';
 import { CreateSubscriberDto } from './dto/create-subscriber.dto';
 import { UpdateSubscriberDto } from './dto/update-subscriber.dto';
-import { CurrentUser, ResponseMessage } from '@/decorator/customizes';
+import { CurrentUser, ResponseMessage, skipCheckPermission } from '@/decorator/customizes';
 import { IUser } from '@/interfaces/user.interface';
 
 @Controller('subscribers')
@@ -26,15 +26,25 @@ export class SubscribersController {
     return this.subscribersService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch()
   @ResponseMessage(" update subcriber")
-  update(@Param('id') id: string, @Body() updateSubscriberDto: UpdateSubscriberDto, @CurrentUser() user:IUser) {
-    return this.subscribersService.update(id, updateSubscriberDto, user);
+  @skipCheckPermission()
+  // khi update một người thì không cần permission
+  update( @Body() updateSubscriberDto: UpdateSubscriberDto, @CurrentUser() user:IUser) {
+    return this.subscribersService.update( updateSubscriberDto, user);
   }
 
   @Delete(':id')
   @ResponseMessage(" delete subcriber")
   remove(@Param('id') id: string, @CurrentUser() user:IUser) {
     return this.subscribersService.remove(id, user);
+  }
+
+  @Post("skills")
+  @ResponseMessage("get subcriber skills")
+  @skipCheckPermission()
+  getUserSkill(@CurrentUser() user:IUser){
+    return this.subscribersService.getSkills(user);
+
   }
 }

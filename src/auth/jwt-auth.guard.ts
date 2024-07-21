@@ -1,5 +1,5 @@
 
-import { IS_PUBLIC_KEY } from '@/decorator/customizes';
+import { IS_PUBLIC_KEY, IS_PUBLIC_PERMISSION } from '@/decorator/customizes';
 import {
     BadRequestException,
     ExecutionContext,
@@ -29,6 +29,13 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     handleRequest(err, user, info, context: ExecutionContext) {
         const request = context.switchToHttp().getRequest<Request>(); // Sửa gọi hàm
+        
+        const isSkipPermission = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_PERMISSION,
+            [
+                context.getHandler(),
+                context.getClass(),
+            ]
+        )
         // You can throw an exception based on either "info" or "err" arguments
         if (err || !user) {
             throw err || new UnauthorizedException("TOKEN không hợp lệ");
@@ -48,7 +55,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             isExist = true;
         }
 
-        if (!isExist) {
+        if (!isExist && !isSkipPermission) {
             throw new ForbiddenException("Bạn không có quyền truy cập endpoint này");
         }
         return user;
