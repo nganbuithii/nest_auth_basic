@@ -1,13 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete,  Query, UseGuards, Req, UnauthorizedException,  NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CurrentUser, Public, ResponseMessage } from '@/decorator/customizes';
 import { IUser } from '@/interfaces/user.interface';
+import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
+import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
 
 @Controller('users')
+// @UseGuards(JwtAuthGuard) 
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService
+  ) {}
 
   // @Get()
   // findAll() {
@@ -27,11 +34,14 @@ export class UsersController {
     }
   }
 
-  // API PATCH
   @Patch()
-  async update(@Body() upUserdto:UpdateUserDto, @CurrentUser() user: IUser){
-    let updateU = await this.usersService.update(upUserdto, user);
-    return updateU;
+  @UseGuards(JwtAuthGuard)  
+  @ResponseMessage('Update user information')
+  async update(
+    @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() user: IUser
+  ) {
+    return this.usersService.update(updateUserDto, user);
   }
 
   @Delete(':id')
@@ -40,14 +50,15 @@ export class UsersController {
     return this.usersService.remove(id, user);
   }
 
-  @Public()
-  @Get(':id')
-  @ResponseMessage("fetch usere by id")
-  async findOne(@Param('id') id: string)
-  {
-    const foundUser = await this.usersService.findOne(id);
-    return foundUser;
-  }
+  // @Public()
+  // @Get(':id')
+  // @UseGuards(JwtAuthGuard)
+  // @ResponseMessage("fetch usere by id")
+  // async findOne(@Param('id') id: string)
+  // {
+  //   const foundUser = await this.usersService.findOne(id);
+  //   return foundUser;
+  // }
 
   // phân trang - find all
   @Public()
@@ -59,5 +70,21 @@ export class UsersController {
     @Query() qs:string
   ){
     return this.usersService.findAll(+currentPage, +limit, qs)
+  }
+
+  @Get('current')
+  @UseGuards(JwtAuthGuard) // Ensure the user is authenticated
+  @ResponseMessage('Fetch current user data')
+  async getCurrentUser(@CurrentUser() user: IUser) {
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    const foundUser = await this.usersService.findOne(user._id);
+    if (!foundUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    return foundUser;
   }
 }

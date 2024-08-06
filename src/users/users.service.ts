@@ -276,19 +276,31 @@ export class UsersService implements OnModuleInit {
   }
 
   async update(userUpdate: UpdateUserDto, user: IUser) {
-    const updated = await this.userModel.updateOne(
+    // Cập nhật người dùng
+    const result = await this.userModel.updateOne(
+      { _id: userUpdate._id },
       {
-        _id: userUpdate._id
-      }, {
-      ...userUpdate,
-      updatefBy: {
-        _id: user._id,
-        email: user.email
+        ...userUpdate,
+        updatedBy: {
+          _id: user._id,
+          email: user.email
+        }
       }
+    );
+  
+    // Kiểm tra nếu cập nhật thành công và tìm lại người dùng
+    if (result.modifiedCount === 1) {
+      const updatedUser = await this.userModel.findById(userUpdate._id)
+        .select("-password")
+        .populate({ path: "role", select: { name: 1, _id: 1 } })
+        .exec();
+      
+      return updatedUser;
+    } else {
+      throw new BadRequestException("User update failed");
     }
-    )
-    return updated;
   }
+  
 
   getHashPassword(password: string): string {
     const salt = genSaltSync(10);
@@ -317,6 +329,20 @@ export class UsersService implements OnModuleInit {
   async findUserByToken(refreshToken: string) {
     return await this.userModel.findOne({ refreshToken })
       .populate({ path: "role", select: { name: 1 } });
+  }
+  async getInfo(userId: string): Promise<IUser | null> {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return null; // Hoặc xử lý lỗi phù hợp
+    }
+
+    const user = await this.userModel.findById(userId).exec();
+    if (user) {
+      return {
+        ...user.toObject(),
+        _id: user._id.toString() // Chuyển ObjectId thành string
+      };
+    }
+    return null;
   }
 
 }
