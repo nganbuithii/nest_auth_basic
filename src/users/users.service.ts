@@ -10,17 +10,17 @@ import { CreateUserDto, RegisterUserDto } from './dto/create-user.dto';
 import { CurrentUser } from '@/decorator/customizes';
 import { IUser } from '@/interfaces/user.interface';
 import aqp from 'api-query-params';
+import { Role, RoleDocument } from '@/roles/schemas/role.schema';
 
 
 @Injectable()
 export class UsersService implements OnModuleInit {
 
   constructor(
-    @InjectModel(User.name)
-    //  để có thể xóa mềm được thêm kiểu SoftDelete
-    private userModel: SoftDeleteModel<UserDocument>,
+    @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
+    @InjectModel(Role.name) private roleModel: Model<RoleDocument>,
     private configService: ConfigService
-  ) { }
+  ) {}
 
   async onModuleInit() {
     const count = await this.userModel.count();
@@ -58,6 +58,25 @@ export class UsersService implements OnModuleInit {
   }
 
 
+  // async findAll(currentPage: number, limit: number, qs: string) {
+  //   const { filter, sort, population } = aqp(qs);
+  //   delete filter.current;
+  //   delete filter.pageSize;
+
+  //   let offset = (+currentPage - 1) * (+limit);
+  //   let defaultLimit = +limit ? +limit : 10;
+
+  //   const total = (await this.userModel.find(filter)).length;
+  //   const totalPage = Math.ceil(total / defaultLimit);
+
+  //   const result = await this.userModel.find(filter)
+  //     .skip(offset)
+  //     .limit(defaultLimit)
+  //     .sort(sort as any)
+  //     .select("-password")
+  //     .populate(population)
+  //     .exec();
+  // }
   async findAll(currentPage: number, limit: number, qs: string) {
     const { filter, sort, population } = aqp(qs);
     delete filter.current;
@@ -76,6 +95,8 @@ export class UsersService implements OnModuleInit {
       .select("-password")
       .populate(population)
       .exec();
+
+    return { result, totalPage }; // Đảm bảo trả về kết quả và tổng số trang
   }
 
   async findByEmail(email: string) {
@@ -92,31 +113,54 @@ export class UsersService implements OnModuleInit {
     return this.userModel.findOne({
       _id: id
     }).select("-password") // không lấy password
-    .populate({path:"role", select:{name:1, _id:1}})
+      .populate({ path: "role", select: { name: 1, _id: 1 } })
   }
   findOneByUsername(username: string) {
-
-    return this.userModel.findOne({
-      email: username
-    }).populate({path:"role", select:{name:1, permissions:1}})
+    return this.userModel.findOne({ email: username })
+      .populate({ path: "role", select: { name: 1, permissions: 1 } });
   }
+
   checkUserPassword(password: string, hash: string) {
     return compareSync(password, hash);
     // sẽ trả ra true hoặc false
   }
 
-  async remove(id: string, user: IUser) {
-    // không cho xóa user có emial là admin
-    // admin@gmail.com
-    // nếu muốn cấu hihf động thì cấu hình trong env
+  // async remove(id: string, user: IUser) {
+  //   // không cho xóa user có emial là admin
+  //   // admin@gmail.com
+  //   // nếu muốn cấu hihf động thì cấu hình trong env
 
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return 'not found user'
-    // để xóa mềm gọi soft delete
-    const foundUser = await this.userModel.findById("id");
-    if(foundUser && foundUser.email == 'admin@gmail.com'){
-      throw new BadRequestException("can not delete user has email admin@gmail.com")
+  //   if (!mongoose.Types.ObjectId.isValid(id))
+  //     return 'not found user'
+  //   // để xóa mềm gọi soft delete
+  //   const foundUser = await this.userModel.findById("id");
+  //   if(foundUser && foundUser.email == 'admin@gmail.com'){
+  //     throw new BadRequestException("can not delete user has email admin@gmail.com")
+  //   }
+  //   await this.userModel.updateOne(
+  //     { _id: id },
+  //     {
+  //       deletedBy: {
+  //         _id: user._id,
+  //         email: user.email
+  //       }
+  //     }
+  //   )
+  //   return this.userModel.softDelete
+  //     ({
+  //       _id: id
+  //     })
+  // }
+  async remove(id: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return 'not found user';
     }
+
+    const foundUser = await this.userModel.findById(id); // Sửa thành id
+    if (foundUser && foundUser.email === 'admin@gmail.com') {
+      throw new BadRequestException("Cannot delete user with email admin@gmail.com");
+    }
+
     await this.userModel.updateOne(
       { _id: id },
       {
@@ -125,37 +169,35 @@ export class UsersService implements OnModuleInit {
           email: user.email
         }
       }
-    )
-    return this.userModel.softDelete
-      ({
-        _id: id
-      })
+    );
+
+    return this.userModel.softDelete({ _id: id });
   }
 
+  // async register(user: RegisterUserDto) {
+  //   const { name, email, password, age, address } = user;
+  //   // check logic email đã tồn tại chưa
+  //   const isExist = await this.userModel.findOne({ email: email });
+  //   if (isExist) {
+  //     throw new BadRequestException(`Email đã tồn tại ${email}`);
+  //   }
+  //   const salt = genSaltSync(10);
+  //   const hashedPassword = hashSync(user.password, salt);
+  //   const newUser = await this.userModel.create({
+  //     name, email,
+  //     password: hashedPassword,
+  //     age,
+  //     role: 'USER'
+  //   })
+  //   return newUser;
+  // }
   async register(user: RegisterUserDto) {
-    const { name, email, password, age, address } = user;
-    // check logic email đã tồn tại chưa
-    const isExist = await this.userModel.findOne({ email: email });
-    if (isExist) {
-      throw new BadRequestException(`Email đã tồn tại ${email}`);
-    }
-    const salt = genSaltSync(10);
-    const hashedPassword = hashSync(user.password, salt);
-    const newUser = await this.userModel.create({
-      name, email,
-      password: hashedPassword,
-      age,
-      role: 'USER'
-    })
-    return newUser;
-  }
-  async create(createUser: CreateUserDto, @CurrentUser() user: IUser) {
-    const { name, email, password, company, age, address } = createUser;
+    const { name, email, password, age } = user; // Đảm bảo không có thuộc tính không cần thiết
 
-    // Kiểm tra xem email đã tồn tại chưa
-    const isExist = await this.userModel.findOne({ email: email });
+    // Check if email already exists
+    const isExist = await this.userModel.findOne({ email });
     if (isExist) {
-      throw new BadRequestException(`Email đã tồn tại ${email}`);
+      throw new BadRequestException(`Email already exists: ${email}`);
     }
 
     const salt = genSaltSync(10);
@@ -166,21 +208,72 @@ export class UsersService implements OnModuleInit {
       email,
       password: hashedPassword,
       age,
-      role: 'USER',
-      company: {
-        _id: company._id,
-        name: company.name,
-      },
-      createdBy: {
-        _id: user._id,
-        email: user.email,
-      },
-      createdDate: new Date(), // Thêm createdDate vào đây nếu cần
+      role: 'USER'
     });
 
     return newUser;
   }
 
+  // async create(createUser: CreateUserDto) {
+  //   // const { name, email, password, company, age, address } = createUser;
+  //   const { name, email, password } = createUser;
+
+  //   // Kiểm tra xem email đã tồn tại chưa
+  //   const isExist = await this.userModel.findOne({ email: email });
+  //   if (isExist) {
+  //     throw new BadRequestException(`Email đã tồn tại ${email}`);
+  //   }
+
+  //   const salt = genSaltSync(10);
+  //   const hashedPassword = hashSync(password, salt);
+
+  //   const newUser = await this.userModel.create({
+  //     name,
+  //     email,
+  //     password: hashedPassword,
+  //     // age,
+  //     role: 'USER',
+  //     // company: {
+  //     //   _id: company._id,
+  //     //   name: company.name,
+  //     // },
+  //     // createdBy: {
+  //     //   _id: user._id,
+  //     //   email: user.email,
+  //     // },
+  //     createdDate: new Date(), // Thêm createdDate vào đây nếu cần
+  //   });
+
+  //   return newUser;
+  // }
+  async create(createUser: CreateUserDto) {
+    const { name, email, password } = createUser;
+
+    // Kiểm tra xem email đã tồn tại chưa
+    const isExist = await this.userModel.findOne({ email });
+    if (isExist) {
+      throw new BadRequestException(`Email already exists: ${email}`);
+    }
+
+    // Tìm ObjectId của role 'USER'
+    const userRole = await this.roleModel.findOne({ name: 'NORMAL_USER' });
+    if (!userRole) {
+      throw new BadRequestException('Role not found');
+    }
+
+    const salt = genSaltSync(10);
+    const hashedPassword = hashSync(password, salt);
+
+    const newUser = await this.userModel.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: userRole._id, // Gán ObjectId của role
+      createdDate: new Date(),
+    });
+
+    return newUser;
+  }
 
   async update(userUpdate: UpdateUserDto, user: IUser) {
     const updated = await this.userModel.updateOne(
@@ -213,12 +306,17 @@ export class UsersService implements OnModuleInit {
   }
 
 
-  findUserByToken = async (refeshToken: string) => {
-    return await this.userModel.findOne(
-      { refeshToken }
-    ).populate({
-      path:"role",
-      select:{name:1}
-    })
+  // findUserByToken = async (refeshToken: string) => {
+  //   return await this.userModel.findOne(
+  //     { refeshToken }
+  //   ).populate({
+  //     path:"role",
+  //     select:{name:1}
+  //   })
+  // }
+  async findUserByToken(refreshToken: string) {
+    return await this.userModel.findOne({ refreshToken })
+      .populate({ path: "role", select: { name: 1 } });
   }
+
 }

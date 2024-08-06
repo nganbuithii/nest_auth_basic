@@ -14,12 +14,13 @@ export class UsersController {
   //   return this.usersService.findAll();
   // }
 
-  // api thêm user - đối với HR -cần token
-  @Post()
+
+  @Post('create')
+  @Public()
   @ResponseMessage("create a user")
-  async create(@Body() u:  CreateUserDto, @CurrentUser() user:IUser)
+  async create(@Body() u:  CreateUserDto)
   {
-    let newUser = await this.usersService.create(u,user);
+    let newUser = await this.usersService.create(u);
     return {
       _id: newUser?._id,
       createdDate: newUser?.createdDate,

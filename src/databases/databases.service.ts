@@ -29,6 +29,9 @@ export class DatabasesService implements OnModuleInit {
 
     async onModuleInit() {
         const isInit = this.configService.get<string>("SHOULD_INIT");
+        this.logger.log(`SHOULD_INIT value: ${isInit}`);
+
+
         if (Boolean(isInit)) {
 
             const countUser = await this.userModel.count({});
@@ -97,6 +100,9 @@ export class DatabasesService implements OnModuleInit {
             if (countUser > 0 && countRole > 0 && countPermission > 0) {
                 this.logger.log('>>> ALREADY INIT SAMPLE DATA...');
             }
+            this.logger.log(`Count User: ${countUser}`);
+            this.logger.log(`Count Permission: ${countPermission}`);
+            this.logger.log(`Count Role: ${countRole}`);
         }
     }
 }

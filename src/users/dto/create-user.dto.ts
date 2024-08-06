@@ -20,23 +20,23 @@ export class CreateUserDto {
     @IsNotEmpty({ message: 'Mật khẩu không được để trống', })
     password: string;
 
-    @IsNotEmpty({ message: "Tuổi không được để trống" })
+    // @IsNotEmpty({ message: "Tuổi không được để trống" })
     age: number
 
-    @IsNotEmpty({ message: "Địa chỉ không được để trống" })
+    // @IsNotEmpty({ message: "Địa chỉ không được để trống" })
     address: string;
 
 
-    @IsNotEmpty({ message: "Quyền không được để trống" })
-    @IsMongoId({message:"role có định dạng là mongo id"})
-    role: string;
+    // @IsNotEmpty({ message: "Quyền không được để trống" })
+    // @IsMongoId({message:"role có định dạng là mongo id"})
+    // role: string;
 
-    // validate object
-    @IsNotEmptyObject()
-    @IsObject()
-    @ValidateNested()
-    @Type(() => Company)
-    company: Company;
+    // // validate object
+    // @IsNotEmptyObject()
+    // @IsObject()
+    // @ValidateNested()
+    // @Type(() => Company)
+    // company: Company;
 
 }
 

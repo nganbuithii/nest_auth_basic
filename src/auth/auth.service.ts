@@ -17,38 +17,84 @@ export class AuthService {
         private jwtService: JwtService,
         private configService: ConfigService,
         private userService: UsersService,
-        private roleService :RolesService,
+        private roleService: RolesService,
     ) { }
 
     // user và pass là 2 tham số passport ném về
+    // async validateUser(username: string, pass: string): Promise<any> {
+    //     const user = await this.usersService.findOneByUsername(username);
+    //     if (user) {
+    //         const isValid = this.usersService.checkUserPassword(pass, user.password)
+    //         if (isValid == true) {
+    //             const userRole = user.role as unknown as { _id: string, name: string }
+    //             const temp = await this.roleService.findOne(userRole._id);
+
+    //             if (typeof temp === 'object' && 'permissions' in temp) {
+    //                 const objUser = {
+    //                     ...user.toObject(),
+    //                     permissions: temp.permissions
+    //                 }
+    //                 return objUser;
+    //             } else {
+    //                 // Xử lý khi không tìm thấy quyền
+    //                 const objUser = {
+    //                     ...user.toObject(),
+    //                     permissions: []
+    //                 }
+    //                 return objUser;
+    //             }
+    //         }
+    //     }
+    //     return null;
+    // }
     async validateUser(username: string, pass: string): Promise<any> {
         const user = await this.usersService.findOneByUsername(username);
-        if (user) {
-            const isValid = this.usersService.checkUserPassword(pass, user.password)
-            if (isValid == true) {
-                const userRole = user.role as unknown as { _id: string, name: string }
-                const temp = await this.roleService.findOne(userRole._id);
-    
-                if (typeof temp === 'object' && 'permissions' in temp) {
-                    const objUser = {
-                        ...user.toObject(),
-                        permissions: temp.permissions
-                    }
-                    return objUser;
-                } else {
-                    // Xử lý khi không tìm thấy quyền
-                    const objUser = {
-                        ...user.toObject(),
-                        permissions: []
-                    }
-                    return objUser;
-                }
-            }
+        if (!user) {
+            return null; // Người dùng không tồn tại
         }
-        return null;
+        const isValid = this.usersService.checkUserPassword(pass, user.password);
+        if (isValid) {
+            return user; // Trả về người dùng nếu mật khẩu hợp lệ
+        }
+        return null; // Mật khẩu không đúng
     }
     
+    
 
+
+    // async login(user: any, response: Response) {
+    //     const { _id, name, email, role } = user;
+    //     const payload = {
+    //         sub: "token login",
+    //         iss: "from server",
+    //         _id,
+    //         name,
+    //         email,
+    //         role
+    //     };
+    //     const refreshToken = this.createRefreshToken(payload);
+
+    //     // updfate user with refresh token
+    //     await this.userService.updateUserToken(refreshToken, _id);
+
+    //     // set refresh token as cookie
+    //     // khi mà access token mà hết hạn thì ta sẽ dùng refresh token
+    //     response.cookie('refresh_token', refreshToken, {
+    //         httpOnly: true,
+    //         maxAge: ms(this.configService.get<string>("JWT_REFRESH_EXPRIRE"))  // tính theo mili giây
+    //     })
+
+    //     return {
+    //         access_token: this.jwtService.sign(payload),
+    //         user:
+    //         {
+    //             _id,
+    //             name,
+    //             email,
+    //             role
+    //         }
+    //     };
+    // }
     async login(user: any, response: Response) {
         const { _id, name, email, role } = user;
         const payload = {
@@ -60,29 +106,20 @@ export class AuthService {
             role
         };
         const refreshToken = this.createRefreshToken(payload);
-
-        // updfate user with refresh token
+    
         await this.userService.updateUserToken(refreshToken, _id);
-
-        // set refresh token as cookie
-        // khi mà access token mà hết hạn thì ta sẽ dùng refresh token
+    
         response.cookie('refresh_token', refreshToken, {
             httpOnly: true,
-            maxAge: ms(this.configService.get<string>("JWT_REFRESH_EXPRIRE"))  // tính theo mili giây
-        })
-
+            maxAge: ms(this.configService.get<string>("JWT_REFRESH_EXPRIRE"))
+        });
+    
         return {
             access_token: this.jwtService.sign(payload),
-            user:
-            {
-                _id,
-                name,
-                email,
-                role
-            }
+            user: { _id, name, email, role }
         };
     }
-
+    
     async register(registerUserDto: RegisterUserDto) {
         try {
             const newUser = await this.usersService.register(registerUserDto);
@@ -160,7 +197,7 @@ export class AuthService {
         }
     }
 
-    logout = async(reponse: Response, user: IUser) => {
+    logout = async (reponse: Response, user: IUser) => {
         // set refresh tokenm bằng rỗng
         await this.userService.updateUserToken("", user._id);
 
